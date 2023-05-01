@@ -49,7 +49,7 @@ def get_stock_data(ticker):
     # Get the ticker symbol
     ticker_symbol = str(ticker) + '.SR'
     # Download the ticker data for the selected ticker
-    ticker_data = yf.download(ticker_symbol, period='1y')
+    ticker_data = yf.download(ticker_symbol, period='10y')
 
     return ticker_data
 
@@ -94,7 +94,7 @@ if not selected_ticker_data.empty:
     st.table(pd.DataFrame(stock_data, index=[0]))
 
     # Create QuantFig object for the stock price chart
-    qf = cf.QuantFig(ticker_data, title=f"{selected_ticker_data['ArabicName'].iloc[0]} Stock Price in 2021", name='Stock Price', up_color='green', down_color='red')
+    qf = cf.QuantFig(ticker_data, title=f"{selected_ticker_data['ArabicName'].iloc[0]} Stock Price", name='Stock Price', up_color='green', down_color='red')
 
     # Add moving averages
     qf.add_sma(periods=14, column='Close', width=2, color='blue')
@@ -116,7 +116,7 @@ if not selected_ticker_data.empty:
     fig = qf.iplot(asFigure=True)
 
     # Update the layout to set the width
-    fig.update_layout(width=1100)
+    fig.update_layout(width=1100, height = 700)
 
     # Display the stock price chart
     st.plotly_chart(fig)
