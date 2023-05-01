@@ -67,7 +67,6 @@ df = load_stock_data()
 df = load_stock_data()
 selected_ticker = st.selectbox('Select Ticker', options=df[['ArabicName', 'ticker']].apply(lambda x: f"{x['ArabicName']} ({x['ticker']})", axis=1).tolist())
 selected_ticker = int((selected_ticker.split()[-1])[1:-1])
-st.write(df)
 # Filter the DataFrame based on the selected ticker
 selected_ticker_data = df[df['ticker'] == selected_ticker]
 
