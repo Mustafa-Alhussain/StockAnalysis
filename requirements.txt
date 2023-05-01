@@ -1,0 +1,6 @@
+cufflinks==0.17.3
+pandas==1.4.4
+plotly==5.9.0
+Requests==2.29.0
+streamlit==1.21.0
+yfinance==0.2.18

@@ -10,35 +10,48 @@ from datetime import datetime, timedelta
 # URL to the JSON file
 url = "https://www.saudiexchange.sa/tadawul.eportal.theme.helper/TickerServlet"
 
-# Send a GET request to the URL
-response = requests.get(url)
+@st.cache_data()
+def load_stock_data():
+    # Send a GET request to the URL
+    response = requests.get(url)
 
-# Check if the request was successful
-if response.status_code == 200:
-    # Get the JSON data from the response
-    json_data = response.json()
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Get the JSON data from the response
+        json_data = response.json()
 
-    # Create a DataFrame from the JSON data
-    df = pd.DataFrame(json_data)
-lst = df['stockData'].values.tolist()
-# Extract stockData column as a DataFrame
-df = pd.DataFrame(lst)
-# Convert specific columns to desired data types
-df['pk_rf_company'] = df['pk_rf_company'].astype(int)
-df['noOfTrades'] = df['noOfTrades'].astype(int)
-df['turnOver'] = df['turnOver'].astype(float)
-df['volumeTraded'] = df['volumeTraded'].astype(int)
-df['aveTradeSize'] = df['aveTradeSize'].astype(float)
-df['change'] = df['change'].astype(float)
-df['changePercent'] = df['changePercent'].astype(float)
-df['lastTradePrice'] = df['lastTradePrice'].astype(float)
+        # Create a DataFrame from the JSON data
+        df = pd.DataFrame(json_data)
+        lst = df['stockData'].values.tolist()
+        # Extract stockData column as a DataFrame
+        df = pd.DataFrame(lst)
+        # Convert specific columns to desired data types
+        df['pk_rf_company'] = df['pk_rf_company'].astype(int)
+        df['noOfTrades'] = df['noOfTrades'].astype(int)
+        df['turnOver'] = df['turnOver'].astype(float)
+        df['volumeTraded'] = df['volumeTraded'].astype(int)
+        df['aveTradeSize'] = df['aveTradeSize'].astype(float)
+        df['change'] = df['change'].astype(float)
+        df['changePercent'] = df['changePercent'].astype(float)
+        df['lastTradePrice'] = df['lastTradePrice'].astype(float)
 
-# Rename columns
-df = df.rename(columns={
-    'pk_rf_company': 'ticker',
-    'companyShortNameEn': 'EnglishName',
-    'companyShortNameAr': 'ArabicName'
-})
+        # Rename columns
+        df = df.rename(columns={
+            'pk_rf_company': 'ticker',
+            'companyShortNameEn': 'EnglishName',
+            'companyShortNameAr': 'ArabicName'
+        })
+
+        return df
+
+@st.cache_data()
+def get_stock_data(ticker):
+    # Get the ticker symbol
+    ticker_symbol = str(ticker) + '.SR'
+    # Download the ticker data for the selected ticker
+    ticker_data = yf.download(ticker_symbol, period='1y')
+
+    return ticker_data
 
 # Set page config
 st.set_page_config(page_title='Stock Data', page_icon=':chart_with_upwards_trend:', layout='wide')
@@ -47,16 +60,15 @@ st.set_page_config(page_title='Stock Data', page_icon=':chart_with_upwards_trend
 st.title('Stock Data')
 
 # Ticker selection dropdown
+df = load_stock_data()
 selected_ticker = st.selectbox('Select Ticker', df['ticker'].tolist())
 
 # Filter the DataFrame based on the selected ticker
 selected_ticker_data = df[df['ticker'] == selected_ticker]
 
 if not selected_ticker_data.empty:
-    # Get the ticker symbol
-    ticker_symbol = str(selected_ticker_data['ticker'].iloc[0]) + '.SR'
     # Download the ticker data for the selected ticker
-    ticker_data = yf.download(ticker_symbol, period='1y')
+    ticker_data = get_stock_data(selected_ticker)
 
     # Get the high price, low price, and previous close price
     high_price = round(ticker_data['High'].iloc[-1], 2)
@@ -80,6 +92,7 @@ if not selected_ticker_data.empty:
 
     # Display the stock data as a table
     st.table(pd.DataFrame(stock_data, index=[0]))
+
     # Create QuantFig object for the stock price chart
     qf = cf.QuantFig(ticker_data, title=f"{selected_ticker_data['ArabicName'].iloc[0]} Stock Price in 2021", name='Stock Price', up_color='green', down_color='red')
 
@@ -118,3 +131,4 @@ if not selected_ticker_data.empty:
     - Simple Moving Average (SMA): This is a technical analysis tool that calculates the average price of a security over a specific time period. SMA can be used to determine the direction of the trend or to identify potential areas of support and resistance.
     - Bollinger Bands: These are a type of statistical chart characterizing the prices and volatility over time of a financial instrument or commodity. Bollinger Bands use a moving average and two standard deviations, which provides a relative definition of high and low prices.
     ''')
+
