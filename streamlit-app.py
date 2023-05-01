@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 # URL to the JSON file
 url = "https://www.saudiexchange.sa/tadawul.eportal.theme.helper/TickerServlet"
 
-@st.cache_data(ttl=900)  # Cache data for 15 minutes (900 seconds)
+@st.cache_data()  # Cache data for 15 minutes (900 seconds)
 def load_stock_data():
     # Send a GET request to the URL
     response = requests.get(url)
@@ -41,10 +41,11 @@ def load_stock_data():
             'companyShortNameEn': 'EnglishName',
             'companyShortNameAr': 'ArabicName'
         })
+        df = df.sort_values(by='ticker', ascending=True, ignore_index=True)
 
         return df
 
-@st.cache_data(ttl=900)  # Cache data for 15 minutes (900 seconds)
+@st.cache_data()  # Cache data for 15 minutes (900 seconds)
 def get_stock_data(ticker):
     # Get the ticker symbol
     ticker_symbol = str(ticker) + '.SR'
@@ -61,8 +62,12 @@ st.title('Stock Data')
 
 # Ticker selection dropdown
 df = load_stock_data()
-selected_ticker = st.selectbox('Select Ticker', df['ticker'].tolist())
 
+# Ticker selection dropdown
+df = load_stock_data()
+selected_ticker = st.selectbox('Select Ticker', options=df[['ArabicName', 'ticker']].apply(lambda x: f"{x['ArabicName']} ({x['ticker']})", axis=1).tolist())
+selected_ticker = int((selected_ticker.split()[-1])[1:-1])
+st.write(df)
 # Filter the DataFrame based on the selected ticker
 selected_ticker_data = df[df['ticker'] == selected_ticker]
 
@@ -91,7 +96,7 @@ if not selected_ticker_data.empty:
     }
 
     # Display the stock data as a table
-    st.table(pd.DataFrame(stock_data, index=[0]))
+    st.table(pd.DataFrame(stock_data, index=[selected_ticker]))
 
     # Create QuantFig object for the stock price chart
     qf = cf.QuantFig(ticker_data, title=f"{selected_ticker_data['ArabicName'].iloc[0]} Stock Price", name='Stock Price', up_color='green', down_color='red')
