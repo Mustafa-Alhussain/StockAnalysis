@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 # URL to the JSON file
 url = "https://www.saudiexchange.sa/tadawul.eportal.theme.helper/TickerServlet"
 
-@st.cache_data()
+@st.cache_data(ttl=900)  # Cache data for 15 minutes (900 seconds)
 def load_stock_data():
     # Send a GET request to the URL
     response = requests.get(url)
@@ -44,7 +44,7 @@ def load_stock_data():
 
         return df
 
-@st.cache_data()
+@st.cache_data(ttl=900)  # Cache data for 15 minutes (900 seconds)
 def get_stock_data(ticker):
     # Get the ticker symbol
     ticker_symbol = str(ticker) + '.SR'
